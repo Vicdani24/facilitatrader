@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mandante e Mercados</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f9;
+      color: #333;
+    }
+    .container {
+      width: 90%;
+      max-width: 600px;
+      margin: 30px auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #444;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      padding: 10px 15px;
+      margin-right: 5px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button.list {
+      background-color: #28a745;
+      color: #fff;
+    }
+    button.clear {
+      background-color: transparent;
+      border: none;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+    button.clear i {
+      color: #dc3545;
+      font-size: 20px;
+    }
+    .list {
+      margin-top: 20px;
+    }
+    .list-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      background: #f9f9f9;
+      margin-bottom: 5px;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .list-item span {
+      flex: 1;
+    }
+    .actions {
+      display: flex;
+      gap: 5px;
+    }
+    .actions button {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+    }
+    .actions .green {
+      background-color: #28a745;
+    }
+    .actions .red {
+      background-color: #dc3545;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Mandante e Mercados</h1>
+    <div class="form-group">
+      <label for="mandante">Mandante:</label>
+      <input type="text" id="mandante" placeholder="Digite o mandante">
+    </div>
+    <div class="form-group">
+      <label for="mercados">Mercados:</label>
+      <input type="text" id="mercados" placeholder="Digite os mercados">
+    </div>
+    <button class="list" onclick="addToList()">Listar</button>
+    <button class="clear" onclick="clearList()">
+      <i class="fas fa-trash"></i>
+    </button>
+    <div class="list" id="list-container">
+      <!-- Lista será renderizada aqui -->
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+  <script>
+    const listContainer = document.getElementById('list-container');
+
+    // Carregar a lista salva no localStorage
+    window.onload = function() {
+      const savedList = localStorage.getItem('fixedList');
+      if (savedList) {
+        listContainer.innerHTML = savedList;
+      }
+    };
+
+    // Adicionar itens à lista
+    function addToList() {
+      const mandante = document.getElementById('mandante').value.trim();
+      const mercados = document.getElementById('mercados').value.trim();
+
+      if (mandante && mercados) {
+        const listItem = document.createElement('div');
+        listItem.className = 'list-item';
+        listItem.innerHTML = `
+          <span>${mandante} (${mercados})</span>
+          <div class="actions">
+            <button class="green" onclick="markGreen(this)"></button>
+            <button class="red" onclick="markRed(this)"></button>
+          </div>
+        `;
+        listContainer.appendChild(listItem);
+        saveList();
+        clearFields();
+      } else {
+        alert('Preencha todos os campos antes de listar.');
+      }
+    }
+
+    // Limpar campos do formulário
+    function clearFields() {
+      document.getElementById('mandante').value = '';
+      document.getElementById('mercados').value = '';
+    }
+
+    // Limpar a lista
+    function clearList() {
+      if (confirm('Tem certeza que deseja limpar a lista?')) {
+        listContainer.innerHTML = '';
+        localStorage.removeItem('fixedList');
+      }
+    }
+
+    // Marcar botão verde
+    function markGreen(button) {
+      const buttons = button.parentNode.querySelectorAll('button');
+      buttons.forEach(btn => btn.style.opacity = 0.3);
+      button.style.opacity = 1;
+    }
+
+    // Marcar botão vermelho
+    function markRed(button) {
+      const buttons = button.parentNode.querySelectorAll('button');
+      buttons.forEach(btn => btn.style.opacity = 0.3);
+      button.style.opacity = 1;
+    }
+
+    // Salvar lista no localStorage
+    function saveList() {
+      localStorage.setItem('fixedList', listContainer.innerHTML);
+    }
+  </script>
+</body>
+</html>

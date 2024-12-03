@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#000000">
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jogos de Hoje</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-image: url('fundo.jpeg');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      color: #fff;
+    }
+    h1 {
+      text-align: center;
+      color: #fff;
+      padding: 20px 0;
+      background: rgba(0, 0, 0, 0.7);
+    }
+    .buttons {
+      text-align: center;
+      margin: 20px 0;
+    }
+    .buttons button {
+      padding: 10px 15px;
+      margin: 0 10px;
+      border: none;
+      border-radius: 5px;
+      background-color: #444;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s;
+    }
+    .buttons button:hover {
+      background-color: #666;
+      transform: scale(1.05);
+    }
+    iframe {
+      width: 100%;
+      height: 80vh;
+      border: none;
+      margin-top: 20px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    }
+  </style>
+</head>
+<body>
+  <h1>Jogos de Hoje</h1>
+  <div class="buttons">
+    <button onclick="loadPage('futebol.html')">Futebol</button>
+    <button onclick="loadMyList()">Minha Lista</button>
+    <button onclick="loadPage('basket.html')">Basquete</button>
+    <button onclick="loadPage('mma.html')">MMA</button>
+    <button onclick="loadPage('alavancagem.html')">Alavancagem</button>
+  </div>
+
+  <!-- Exibição dinâmica -->
+  <iframe id="contentFrame" src="futebol.html"></iframe>
+
+  <script>
+    // Função para carregar páginas no iframe
+    function loadPage(page) {
+      document.getElementById('contentFrame').style.display = 'block';
+      document.getElementById('contentFrame').src = page;
+    }
+
+    // Função para exibir listagem.html na seção Minha Lista
+    function loadMyList() {
+      document.getElementById('contentFrame').style.display = 'block';
+      document.getElementById('contentFrame').src = 'listagem.html';
+    }
+
+    // Inicializa com a página de Futebol
+    window.onload = function() {
+      loadPage('futebol.html');
+    };
+  </script>
+</body>
+</html>

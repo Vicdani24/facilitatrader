@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jogos de Hoje</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f4f4f9;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      color: #444;
+    }
+    #games {
+      margin-top: 20px;
+    }
+    .game {
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      background: #fff;
+    }
+  </style>
+</head>
+<body>
+  <h1>Jogos de Hoje</h1>
+  <div id="games">Carregando jogos...</div>
+
+  <script>
+    // Substitua pela sua chave da API
+    const apiKey = "eec454bd8e0651ad7b01e6a08e9bf96b";
+    const apiUrl = "https://v3.football.api-sports.io/fixtures";
+
+    // Obter a data de hoje no formato YYYY-MM-DD
+    const today = new Date().toISOString().split("T")[0];
+
+    // Configuração para a requisição da API
+    const headers = {
+      "X-RapidAPI-Host": "v3.football.api-sports.io",
+      "X-RapidAPI-Key": apiKey
+    };
+
+    // Função para buscar jogos
+    async function fetchGames() {
+      try {
+        // Parâmetros para buscar os jogos de hoje
+        const response = await fetch(`${apiUrl}?date=${today}`, { headers });
+        
+        if (!response.ok) {
+          throw new Error(`Erro HTTP: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Exibir os jogos
+        const gamesDiv = document.getElementById("games");
+        gamesDiv.innerHTML = ""; // Limpa o texto inicial
+
+        // Verificar se há jogos na resposta
+        if (data.response && data.response.length === 0) {
+          gamesDiv.innerHTML = "<p>Não há jogos hoje.</p>";
+          return;
+        }
+
+        // Exibir os jogos
+        const fixtures = data.response;
+        fixtures.forEach(fixture => {
+          const gameDiv = document.createElement("div");
+          gameDiv.className = "game";
+          gameDiv.innerHTML = `
+            <p><strong>${fixture.league.name}</strong></p>
+            <p>${fixture.teams.home.name} vs ${fixture.teams.away.name}</p>
+            <p>Horário: ${new Date(fixture.fixture.date).toLocaleTimeString()}</p>
+          `;
+          gamesDiv.appendChild(gameDiv);
+        });
+      } catch (error) {
+        console.error("Erro ao buscar os jogos:", error);
+        document.getElementById("games").innerHTML = "<p>Erro ao carregar os jogos. Tente novamente mais tarde.</p>";
+      }
+    }
+
+    // Chama a função para buscar jogos ao carregar a página
+    fetchGames();
+  </script>
+</body>
+</html>

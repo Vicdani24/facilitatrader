@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eventos de MMA</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f4f4f9;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      color: #444;
+    }
+    #events {
+      margin-top: 20px;
+    }
+    .event {
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      background: #fff;
+      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+      transition: background 0.3s ease;
+    }
+    .event:hover {
+      background: #f1f1f1;
+    }
+    .day-header {
+      margin-top: 20px;
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <h1>Eventos de MMA - Próximas 2 Semanas</h1>
+  <div id="events">Carregando eventos de MMA...</div>
+
+  <script>
+    const mmaUrl = "https://v1.mma.api-sports.io/events";
+    const apiKey = "eec454bd8e0651ad7b01e6a08e9bf96b"; // Insira sua chave da API
+
+    async function fetchMMAEvents() {
+      try {
+        const eventsDiv = document.getElementById("events");
+        eventsDiv.innerHTML = "";
+
+        // Data atual e duas semanas à frente
+        const today = new Date();
+        const twoWeeksLater = new Date(today);
+        twoWeeksLater.setDate(today.getDate() + 14);
+
+        const startDate = today.toISOString().split("T")[0];
+        const endDate = twoWeeksLater.toISOString().split("T")[0];
+
+        const response = await fetch(`${mmaUrl}?from=${startDate}&to=${endDate}`, {
+          method: "GET",
+          headers: {
+            "X-RapidAPI-Host": "v1.mma.api-sports.io",
+            "X-RapidAPI-Key": apiKey,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Erro ao buscar dados: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        const events = data.response;
+
+        if (!events || events.length === 0) {
+          eventsDiv.innerHTML = "<p>Não há eventos de MMA programados para as próximas 2 semanas.</p>";
+          return;
+        }
+
+        // Agrupando eventos por data
+        const groupedEvents = events.reduce((acc, event) => {
+          const eventDate = event.date.split("T")[0];
+          if (!acc[eventDate]) acc[eventDate] = [];
+          acc[eventDate].push(event);
+          return acc;
+        }, {});
+
+        // Renderizar eventos na página
+        for (const [date, events] of Object.entries(groupedEvents)) {
+          eventsDiv.innerHTML += `<p class="day-header">Eventos de MMA (${date}):</p>`;
+          events.forEach(event => {
+            const eventDiv = document.createElement("div");
+            eventDiv.className = "event";
+
+            eventDiv.innerHTML = `
+              <p><strong>Organização:</strong> ${event.organization.name || "N/A"}</p>
+              <p><strong>Local:</strong> ${event.location || "Não informado"}</p>
+              <p><strong>Horário:</strong> ${new Date(event.date).toLocaleTimeString()}</p>
+              <p><strong>Evento:</strong> ${event.name || "N/A"}</p>
+            `;
+
+            eventsDiv.appendChild(eventDiv);
+          });
+        }
+      } catch (error) {
+        console.error("Erro ao buscar eventos de MMA:", error);
+        document.getElementById("events").innerHTML =
+          "<p>Erro ao carregar eventos. Tente novamente mais tarde.</p>";
+      }
+    }
+
+    fetchMMAEvents();
+  </script>
+</body>
+</html>

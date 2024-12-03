@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jogos de Basquete - Hoje e Amanhã</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f4f4f9;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      color: #444;
+    }
+    #basketball-games {
+      margin-top: 20px;
+    }
+    .game {
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      background: #fff;
+      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+      transition: background 0.3s ease;
+    }
+    .game:hover {
+      background: #f1f1f1;
+    }
+    .day-header {
+      margin-top: 20px;
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <h1>Jogos de Basquete - Hoje e Amanhã</h1>
+  <div id="basketball-games">Carregando jogos...</div>
+
+  <script>
+    const apiKey = "eec454bd8e0651ad7b01e6a08e9bf96b";
+    const basketballUrl = "https://v1.basketball.api-sports.io/games";
+
+    const headers = {
+      "X-RapidAPI-Host": "v1.basketball.api-sports.io",
+      "X-RapidAPI-Key": apiKey
+    };
+
+    async function fetchBasketballGames() {
+      try {
+        const basketballDiv = document.getElementById("basketball-games");
+        basketballDiv.innerHTML = "";
+
+        const dates = [new Date().toISOString().split("T")[0], new Date(Date.now() + 86400000).toISOString().split("T")[0]];
+
+        for (const date of dates) {
+          const response = await fetch(`${basketballUrl}?date=${date}`, { headers });
+          if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
+
+          const data = await response.json();
+          const games = data.response;
+
+          if (games.length === 0) {
+            basketballDiv.innerHTML += `<p class="day-header">${date} - Não há jogos de basquete programados.</p>`;
+            continue;
+          }
+
+          basketballDiv.innerHTML += `<p class="day-header">Jogos de Basquete (${date}):</p>`;
+          for (let game of games) {
+            const gameDiv = document.createElement("div");
+            gameDiv.className = "game";
+
+            gameDiv.innerHTML = `
+              <p><strong>Liga:</strong> ${game.league.name}</p>
+              <p><strong>País:</strong> ${game.league.country}</p>
+              <p><strong>Horário:</strong> ${new Date(game.date).toLocaleTimeString()}</p>
+              <p><strong>Partida:</strong> ${game.teams.home.name} vs ${game.teams.away.name}</p>
+            `;
+
+            basketballDiv.appendChild(gameDiv);
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao buscar os jogos de basquete:", error);
+        document.getElementById("basketball-games").innerHTML = "<p>Erro ao carregar os jogos de basquete. Tente novamente mais tarde.</p>";
+      }
+    }
+
+    fetchBasketballGames();
+  </script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alavancagem</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f4f4f9;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      color: #444;
+    }
+    .alavancagem {
+      margin: 20px;
+      padding: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background-color: #fff;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .alavancagem input {
+      margin: 5px;
+      padding: 10px;
+      width: 150px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    .alavancagem .small-input {
+      width: 50px;
+    }
+    .alavancagem button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      background-color: #444;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .alavancagem button:hover {
+      background-color: #666;
+    }
+    .bilhetes {
+      margin: 20px 0;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      background-color: #f9f9f9;
+    }
+  </style>
+</head>
+<body>
+  <h1>Alavancagem</h1>
+
+  <div class="alavancagem">
+    <label for="jogo1">Jogo 1:</label>
+    <input type="text" id="jogo1" placeholder="Nome do jogo 1">
+    <label for="mercado1">M:</label>
+    <input type="text" id="mercado1" class="small-input" placeholder="Mercado"><br>
+
+    <label for="jogo2">Jogo 2:</label>
+    <input type="text" id="jogo2" placeholder="Nome do jogo 2">
+    <label for="mercado2">M:</label>
+    <input type="text" id="mercado2" class="small-input" placeholder="Mercado"><br>
+
+    <label for="jogo3">Jogo 3:</label>
+    <input type="text" id="jogo3" placeholder="Nome do jogo 3">
+    <label for="mercado3">M:</label>
+    <input type="text" id="mercado3" class="small-input" placeholder="Mercado"><br>
+
+    <label for="odd-total">Odd Total:</label>
+    <input type="number" id="odd-total" placeholder="Digite a Odd Total"><br>
+
+    <label for="valor-rs">Valor (R$):</label>
+    <input type="number" id="valor-rs" placeholder="Digite o valor em R$"><br>
+
+    <label for="valor-final">R$ Final:</label>
+    <input type="number" id="valor-final" readonly><br>
+
+    <button onclick="calculateFinal()">Calcular Valor Final</button>
+    <button onclick="addBilhete()">Listar Bilhete</button>
+  </div>
+
+  <div class="bilhetes" id="bilhetes-list">
+    <h3>Bilhetes</h3>
+    <ul id="bilhetes"></ul>
+  </div>
+
+  <script>
+    // Função para calcular o valor final
+    function calculateFinal() {
+      const oddTotal = parseFloat(document.getElementById("odd-total").value) || 0;
+      const valor = parseFloat(document.getElementById("valor-rs").value) || 0;
+      const valorFinal = oddTotal * valor;
+
+      document.getElementById("valor-final").value = valorFinal.toFixed(2);
+    }
+
+    // Função para adicionar bilhetes à lista e limpar os campos
+    function addBilhete() {
+      const jogo1 = document.getElementById("jogo1").value;
+      const mercado1 = document.getElementById("mercado1").value;
+
+      const jogo2 = document.getElementById("jogo2").value;
+      const mercado2 = document.getElementById("mercado2").value;
+
+      const jogo3 = document.getElementById("jogo3").value;
+      const mercado3 = document.getElementById("mercado3").value;
+
+      const oddTotal = document.getElementById("odd-total").value;
+      const valor = document.getElementById("valor-rs").value;
+      const valorFinal = document.getElementById("valor-final").value;
+
+      const bilhetesList = document.getElementById("bilhetes");
+      const bilheteItem = document.createElement("li");
+
+      bilheteItem.innerHTML = `
+        <strong>Bilhete:</strong> 
+        ${jogo1} (${mercado1}), 
+        ${jogo2} (${mercado2}), 
+        ${jogo3} (${mercado3}) | 
+        <strong>Odd Total:</strong> ${oddTotal} | 
+        <strong>R$:</strong> ${valor} | 
+        <strong>R$ Final:</strong> ${valorFinal}
+      `;
+
+      bilhetesList.appendChild(bilheteItem);
+
+      // Limpar os campos
+      document.getElementById("jogo1").value = "";
+      document.getElementById("mercado1").value = "";
+      document.getElementById("jogo2").value = "";
+      document.getElementById("mercado2").value = "";
+      document.getElementById("jogo3").value = "";
+      document.getElementById("mercado3").value = "";
+      document.getElementById("odd-total").value = "";
+      document.getElementById("valor-rs").value = "";
+      document.getElementById("valor-final").value = "";
+    }
+  </script>
+</body>
+</html>
