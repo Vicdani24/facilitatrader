@@ -60,11 +60,9 @@
     const clearButton = document.getElementById("clearButton");
 
     async function fetchGames() {
-      const today = new Date().toISOString().split("T")[0];  // Formatação da data (YYYY-MM-DD)
+      const today = new Date().toISOString().split("T")[0];
       try {
-        const response = await fetch(`${apiUrl}/fixtures?date=${today}`, {
-          headers,
-        });
+        const response = await fetch(`${apiUrl}/fixtures?date=${today}`, { headers });
         const data = await response.json();
 
         if (!data.response || data.response.length === 0) {
@@ -74,42 +72,24 @@
 
         gamesDiv.innerHTML = "";
 
-        // Filtrando para jogos apenas das ligas relevantes
-        const relevantLeagues = [
-          2, 3, 410, 542, 632, 742, 701, 14, 39, 40, 45, 61, 64, 135,
-          1, 13, 6, 72, 73, 74, 75, 76, 20, 323, 137, 139, 547, 704, 110, 111, 21,
-          43, 46, 49, 16, 119, 121, 122, 94, 12, 62, 673, 290, 123, 124, 125, 128,
-          88, 102, 629, 632, 203, 204, 107, 382, 496, 714, 382, 585, 514, 31, 79,
-          121, 29, 103, 82, 67, 85, 23, 84, 602, 606, 609, 618, 624, 150, 135, 155,
-          140, 141, 142, 143, 188, 190, 179, 383, 110, 496, 475, 476, 477,
-        ];
+        // Processar cada jogo individualmente
+        for (const fixture of data.response) {
+          const { league, teams } = fixture;
 
-        const filteredFixtures = data.response.filter(fixture =>
-          relevantLeagues.includes(fixture.league.id)
-        );
+          // Filtrar ligas relevantes
+          const relevantLeagues = [39, 61, 135, 140, 78, 2, 3];
+          if (!relevantLeagues.includes(league.id)) continue;
 
-        if (filteredFixtures.length === 0) {
-          gamesDiv.innerHTML = "<p>Não há jogos relevantes hoje.</p>";
-          return;
-        }
+          const homeResults = await fetchLastResults(teams.home.id);
+          const awayResults = await fetchLastResults(teams.away.id);
 
-        for (const fixture of filteredFixtures) {
-          const homeTeamId = fixture.teams.home.id;
-          const awayTeamId = fixture.teams.away.id;
-
-          // Buscar os últimos 5 jogos de cada equipe
-          const homeResults = await fetchLastResults(homeTeamId);
-          const awayResults = await fetchLastResults(awayTeamId);
-
-          // Analisar mercados
           const markets = analyzeMarkets(homeResults, awayResults);
 
-          // Criar o elemento do jogo com mercados analisados
           const gameDiv = document.createElement("div");
           gameDiv.className = "game";
           gameDiv.innerHTML = `
-            <p><strong>${fixture.teams.home.name} vs ${fixture.teams.away.name}</strong></p>
-            ${markets.length > 0 ? markets.join("") : "<p>Nenhum mercado relevante.</p>"}
+            <p><strong>${teams.home.name} vs ${teams.away.name}</strong></p>
+            ${markets.length ? markets.join("") : "<p>Nenhum mercado relevante.</p>"}
           `;
           gamesDiv.appendChild(gameDiv);
         }
@@ -126,7 +106,7 @@
           { headers }
         );
         const data = await response.json();
-        return data.response.map((match) => ({
+        return data.response.map(match => ({
           homeGoals: match.goals.home,
           awayGoals: match.goals.away,
         }));
@@ -137,42 +117,34 @@
     }
 
     function analyzeMarkets(homeResults, awayResults) {
-      const markets = [];
       const totalGames = homeResults.length + awayResults.length;
 
       const analyzeGoals = (threshold) =>
         homeResults.filter(match => match.homeGoals + match.awayGoals >= threshold).length +
         awayResults.filter(match => match.homeGoals + match.awayGoals >= threshold).length;
 
-      const analyzeBothTeamsScore = (results) =>
+      const bothTeamsScore = (results) =>
         results.filter(match => match.homeGoals > 0 && match.awayGoals > 0).length;
 
-      // Análise para mercados relevantes
+      const markets = [];
+
       if (analyzeGoals(1.5) >= 7) markets.push('<p class="market">+1.5 Gols</p>');
       if (analyzeGoals(2.5) >= 7) markets.push('<p class="market">+2.5 Gols</p>');
       if (analyzeGoals(3.5) >= 7) markets.push('<p class="market">+3.5 Gols</p>');
-      if (totalGames - analyzeGoals(3.5) >= 7) markets.push('<p class="market">-3.5 Gols</p>');
-      if (totalGames - analyzeGoals(2.5) >= 7) markets.push('<p class="market">-2.5 Gols</p>');
+      if (analyzeGoals(-3.5) >= 7) markets.push('<p class="market">-3.5 Gols</p>');
+      if (analyzeGoals(-2.5) >= 7) markets.push('<p class="market">-2.5 Gols</p>');
 
-      const bothTeamsScoreHome = analyzeBothTeamsScore(homeResults);
-      const bothTeamsScoreAway = analyzeBothTeamsScore(awayResults);
-
-      if (bothTeamsScoreHome + bothTeamsScoreAway >= 7) {
+      if (bothTeamsScore(homeResults) + bothTeamsScore(awayResults) >= 7) {
         markets.push('<p class="market">Ambas Marcam</p>');
-      }
-      if (totalGames - (bothTeamsScoreHome + bothTeamsScoreAway) >= 7) {
-        markets.push('<p class="market">Ambas Não Marcam</p>');
       }
 
       return markets;
     }
 
-    // Função para limpar a lista de jogos
     function clearGames() {
       gamesDiv.innerHTML = "";
     }
 
-    // Recarregar a lista de jogos
     loadButton.addEventListener("click", fetchGames);
     clearButton.addEventListener("click", clearGames);
   </script>
