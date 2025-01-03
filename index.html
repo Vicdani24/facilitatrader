@@ -1,86 +1,183 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
-  <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#000000">
-
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Jogos de Hoje</title>
+  <title>Análise de Jogos</title>
   <style>
     body {
       font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom, #1b1b1b, #333);
+      color: white;
+      text-align: center;
       margin: 0;
-      padding: 0;
-      background-image: url('fundo.jpeg');
-      background-size: cover;
-      background-position: center;
-      background-attachment: fixed;
-      color: #fff;
+      padding: 20px;
     }
-    h1 {
-      text-align: center;
-      color: #fff;
-      padding: 20px 0;
-      background: rgba(0, 0, 0, 0.7);
+    .game {
+      background: #444;
+      border-radius: 8px;
+      margin: 20px auto;
+      padding: 20px;
+      max-width: 600px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
     }
-    .buttons {
-      text-align: center;
-      margin: 20px 0;
+    .market {
+      margin: 10px 0;
+      font-weight: bold;
     }
-    .buttons button {
-      padding: 10px 15px;
-      margin: 0 10px;
+    button {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
       border: none;
       border-radius: 5px;
-      background-color: #444;
-      color: #fff;
-      cursor: pointer;
-      transition: background 0.3s, transform 0.2s;
+      background-color: #555;
+      color: white;
     }
-    .buttons button:hover {
+    button:hover {
       background-color: #666;
-      transform: scale(1.05);
-    }
-    iframe {
-      width: 100%;
-      height: 80vh;
-      border: none;
-      margin-top: 20px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
     }
   </style>
 </head>
 <body>
-  <h1>Jogos de Hoje</h1>
-  <div class="buttons">
-    <button onclick="loadPage('futebol.html')">Futebol</button>
-    <button onclick="loadMyList()">Minha Lista</button>
-    <button onclick="loadPage('basket.html')">Basquete</button>
-    <button onclick="loadPage('mma.html')">MMA</button>
-    <button onclick="loadPage('alavancagem.html')">Alavancagem</button>
-  </div>
+  <h1>Análise de Jogos</h1>
+  <div id="games">Carregando jogos...</div>
 
-  <!-- Exibição dinâmica -->
-  <iframe id="contentFrame" src="futebol.html"></iframe>
+  <button id="loadButton">Carregar Jogos</button>
+  <button id="clearButton">Apagar Lista</button>
 
   <script>
-    // Função para carregar páginas no iframe
-    function loadPage(page) {
-      document.getElementById('contentFrame').style.display = 'block';
-      document.getElementById('contentFrame').src = page;
-    }
-
-    // Função para exibir listagem.html na seção Minha Lista
-    function loadMyList() {
-      document.getElementById('contentFrame').style.display = 'block';
-      document.getElementById('contentFrame').src = 'listagem.html';
-    }
-
-    // Inicializa com a página de Futebol
-    window.onload = function() {
-      loadPage('futebol.html');
+    const apiKey = "eec454bd8e0651ad7b01e6a08e9bf96b";
+    const apiUrl = "https://v3.football.api-sports.io";
+    const headers = {
+      "X-RapidAPI-Host": "v3.football.api-sports.io",
+      "X-RapidAPI-Key": apiKey,
     };
+
+    const gamesDiv = document.getElementById("games");
+    const loadButton = document.getElementById("loadButton");
+    const clearButton = document.getElementById("clearButton");
+
+    async function fetchGames() {
+      const today = new Date().toISOString().split("T")[0];  // Formatação da data (YYYY-MM-DD)
+      try {
+        const response = await fetch(`${apiUrl}/fixtures?date=${today}`, {
+          headers,
+        });
+        const data = await response.json();
+
+        if (!data.response || data.response.length === 0) {
+          gamesDiv.innerHTML = "<p>Não há jogos hoje.</p>";
+          return;
+        }
+
+        gamesDiv.innerHTML = "";
+
+        // Filtrando para jogos apenas das ligas relevantes
+        const relevantLeagues = [
+           2, 3, 410,542,632,742,701,14, 39, 40, 45, 61, 64, 135, // Premier League, Serie A
+          1, 13, 6, 72,73,74,75,76,20, 323,137,139,547,704,110,111,21, 43, 46, 49, 16, // Alemanha 1,2, Copa, Feminino
+          119, 121, 122,94,12,62,673,290, 123, 124, 125, 128,  // Copa América, Libertadores, etc.
+          88, 102, 629,632,203,204,107,382,496,714,382,585,514, 31, 79, 121, 29,  // Outros campeonatos da lista
+          103, 82, 67, 85, 23, 84,602,606,609,618,624,  // Brasil, Copa, Gaúcho, Carioca, etc.
+          150, 135, 155, 140,141,142,143,188,190,179,383,110,496,475,476,477 // França, Espanha, Itália, outros
+        ];
+
+        const filteredFixtures = data.response.filter(fixture =>
+          relevantLeagues.includes(fixture.league.id)
+        );
+
+        if (filteredFixtures.length === 0) {
+          gamesDiv.innerHTML = "<p>Não há jogos relevantes hoje.</p>";
+          return;
+        }
+
+        for (const fixture of filteredFixtures) {
+          const homeTeamId = fixture.teams.home.id;
+          const awayTeamId = fixture.teams.away.id;
+
+          const homeResults = await fetchLastResults(homeTeamId);
+          const awayResults = await fetchLastResults(awayTeamId);
+
+          const markets = analyzeMarkets(homeResults, awayResults);
+
+          const gameDiv = document.createElement("div");
+          gameDiv.className = "game";
+          gameDiv.innerHTML = `
+            <p><strong>${fixture.teams.home.name} vs ${fixture.teams.away.name}</strong></p>
+            ${markets.length > 0 ? markets.join("") : "<p>Nenhum mercado relevante.</p>"}
+          `;
+          gamesDiv.appendChild(gameDiv);
+        }
+      } catch (error) {
+        console.error("Erro ao buscar jogos:", error);
+        gamesDiv.innerHTML = "<p>Erro ao carregar os jogos.</p>";
+      }
+    }
+
+    async function fetchLastResults(teamId) {
+      try {
+        const response = await fetch(
+          `${apiUrl}/fixtures?team=${teamId}&last=5&status=FT`,
+          { headers }
+        );
+        const data = await response.json();
+        return data.response.map((match) => ({
+          homeGoals: match.goals.home,
+          awayGoals: match.goals.away,
+        }));
+      } catch (error) {
+        console.error("Erro ao buscar resultados:", error);
+        return [];
+      }
+    }
+
+    function analyzeMarkets(homeResults, awayResults) {
+      const markets = [];
+
+      const analyzeGoals = (threshold) => {
+        const homeCount = homeResults.filter(
+          (match) => match.homeGoals + match.awayGoals >= threshold
+        ).length;
+        const awayCount = awayResults.filter(
+          (match) => match.homeGoals + match.awayGoals >= threshold
+        ).length;
+
+        return homeCount + awayCount;
+      };
+
+      const analyzeBothTeamsScore = (results) =>
+        results.filter((match) => match.homeGoals > 0 && match.awayGoals > 0).length;
+
+      // Calculando para os mercados
+      const totalGames = homeResults.length + awayResults.length;
+
+      if (analyzeGoals(1.5) >= 7) markets.push('<p class="market">+1.5 Gols</p>');
+      if (analyzeGoals(2.5) >= 7) markets.push('<p class="market">+2.5 Gols</p>');
+      if (analyzeGoals(3.5) >= 7) markets.push('<p class="market">+3.5 Gols</p>');
+      if (analyzeGoals(-3.5) >= 7) markets.push('<p class="market">-3.5 Gols</p>');
+      if (analyzeGoals(-2.5) >= 7) markets.push('<p class="market">-2.5 Gols</p>');
+
+      if (analyzeBothTeamsScore(homeResults) >= 3 && analyzeBothTeamsScore(awayResults) >= 3) {
+        markets.push('<p class="market">Ambas Marcam</p>');
+      }
+      
+      if (totalGames - analyzeBothTeamsScore(homeResults) - analyzeBothTeamsScore(awayResults) >= 7) {
+        markets.push('<p class="market">Ambas Não Marcam</p>');
+      }
+
+      return markets;
+    }
+
+    // Função para limpar a lista de jogos
+    function clearGames() {
+      gamesDiv.innerHTML = "";
+    }
+
+    // Recarregar a lista de jogos
+    loadButton.addEventListener("click", fetchGames);
+    clearButton.addEventListener("click", clearGames);
   </script>
 </body>
 </html>
